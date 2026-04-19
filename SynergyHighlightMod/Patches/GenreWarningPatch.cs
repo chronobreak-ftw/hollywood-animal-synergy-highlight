@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Data.Configs;
 using Data.GameObject;
 using HarmonyLib;
 using UI.Views;
@@ -42,6 +43,33 @@ namespace SynergyHighlightMod.Patches
         private const float PAIR_SUM_MIN = 0.70f;
         private const float PAIR_FRAC_MIN = 0.35f;
 
+        private const float PAIR_SYNERGY_GREEN_MIN = 0.35f;
+
+        private static readonly Color OutlineRed = new Color(1f, 0.15f, 0.15f);
+        private static readonly Color OutlineGreen = new Color(0.10f, 0.90f, 0.20f);
+
+        private static bool AllSelectedGenrePairsAreFullSynergy(List<TagData> genres)
+        {
+            if (genres == null || genres.Count < 2)
+                return false;
+            for (int i = 0; i < genres.Count; i++)
+            {
+                string a = genres[i]?.Id;
+                if (string.IsNullOrEmpty(a))
+                    return false;
+                for (int j = i + 1; j < genres.Count; j++)
+                {
+                    string b = genres[j]?.Id;
+                    if (string.IsNullOrEmpty(b))
+                        return false;
+                    float sum = SynergyDatabase.GetGenrePairSum(a, b);
+                    if (sum < PAIR_SYNERGY_GREEN_MIN)
+                        return false;
+                }
+            }
+            return true;
+        }
+
         internal static void UpdateWarning(MovieScriptEditorView instance)
         {
             var sliderMB = Traverse.Create(instance).Field("genreSlider").GetValue<MonoBehaviour>();
@@ -52,10 +80,29 @@ namespace SynergyHighlightMod.Patches
             if (movieWrapper == null)
                 return;
 
+            var gameVariables = Traverse
+                .Create(instance)
+                .Field("gameVariables")
+                .GetValue<GameVariables>();
+
             var genres = Traverse.Create(movieWrapper).Property("Genres").GetValue<List<TagData>>();
-            if (genres == null || genres.Count < 2)
+            if (genres == null || genres.Count == 0)
             {
                 SynergyOverlay.ApplyBorder(sliderMB.gameObject, Color.clear);
+                return;
+            }
+
+            // One genre: no GenrePairs.json bonus — MovieProcessor uses unpaired tag Art/Com if the slice
+            // is at least GenresUnpairedMin (see ProcessGenres fall-through). Green when that bar is met.
+            if (genres.Count == 1)
+            {
+                float unpairedMin = gameVariables != null ? gameVariables.GenresUnpairedMin : 0.5f;
+                bool fullUnpairedBonus =
+                    genres[0] != null && genres[0].Fraction + 0.0001f >= unpairedMin;
+                SynergyOverlay.ApplyBorder(
+                    sliderMB.gameObject,
+                    fullUnpairedBonus ? OutlineGreen : Color.clear
+                );
                 return;
             }
 
@@ -64,8 +111,15 @@ namespace SynergyHighlightMod.Patches
             float topSecondary = fractions[1];
 
             bool bonusLost = topSum < PAIR_SUM_MIN || topSecondary < PAIR_FRAC_MIN;
-            var warningColor = bonusLost ? new Color(1f, 0.15f, 0.15f) : Color.clear;
-            SynergyOverlay.ApplyBorder(sliderMB.gameObject, warningColor);
+            Color border;
+            if (bonusLost)
+                border = OutlineRed;
+            else if (AllSelectedGenrePairsAreFullSynergy(genres))
+                border = OutlineGreen;
+            else
+                border = Color.clear;
+
+            SynergyOverlay.ApplyBorder(sliderMB.gameObject, border);
         }
     }
 }

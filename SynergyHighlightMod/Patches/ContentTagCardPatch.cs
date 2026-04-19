@@ -1,3 +1,4 @@
+using System;
 using Data.GameObject;
 using HarmonyLib;
 using UI.Common.Lists.ItemView;
@@ -5,16 +6,43 @@ using UnityEngine;
 
 namespace SynergyHighlightMod.Patches
 {
-    [HarmonyPatch(typeof(ContentTagCardItemView), "OnUpdate")]
-    static class ContentTagCardItemView_OnUpdate_Patch
+    static class ContentTagCardOverlay
     {
-        static void Postfix(ContentTagCardItemView __instance)
+        private static readonly Type ContentTagSelectorPanelType = Type.GetType(
+            "UI.Common.SubPanels.ContentTagSelectorPanel, Assembly-CSharp"
+        );
+
+        private static bool IsUnderContentTagSelectorPanel(Transform t)
         {
-            var tagData = Traverse.Create(__instance).Property("TagData").GetValue<TagData>();
+            if (ContentTagSelectorPanelType == null)
+                return false;
+            for (Transform p = t; p != null; p = p.parent)
+            {
+                if (p.GetComponent(ContentTagSelectorPanelType) != null)
+                    return true;
+            }
+            return false;
+        }
+
+        internal static void Apply(ContentTagCardItemView instance)
+        {
+            var tagData = Traverse.Create(instance).Property("TagData").GetValue<TagData>();
 
             if (tagData == null)
             {
-                SynergyOverlay.Remove(__instance.gameObject);
+                SynergyOverlay.Remove(instance.gameObject);
+                return;
+            }
+
+            if (tagData.Selected && IsUnderContentTagSelectorPanel(instance.transform))
+            {
+                SynergyOverlay.Remove(instance.gameObject);
+                return;
+            }
+
+            if (!instance.Interactable)
+            {
+                SynergyOverlay.Apply(instance.gameObject, Color.clear);
                 return;
             }
 
@@ -22,13 +50,27 @@ namespace SynergyHighlightMod.Patches
 
             if (genres.Count == 0)
             {
-                SynergyOverlay.Apply(__instance.gameObject, Color.clear);
+                SynergyOverlay.Apply(instance.gameObject, Color.clear);
                 return;
             }
 
             float? score = SynergyDatabase.GetSynergyScore(tagData.Id, genres);
             Color color = SynergyOverlay.ScoreToColor(score, SynergyOverlay.OverlayAlphaContent);
-            SynergyOverlay.Apply(__instance.gameObject, color);
+            SynergyOverlay.Apply(instance.gameObject, color);
         }
+    }
+
+    [HarmonyPatch(typeof(ContentTagCardItemView), "OnUpdate")]
+    static class ContentTagCardItemView_OnUpdate_Patch
+    {
+        static void Postfix(ContentTagCardItemView __instance) =>
+            ContentTagCardOverlay.Apply(__instance);
+    }
+
+    [HarmonyPatch(typeof(ContentTagCardItemView), "OnSelectionChanged")]
+    static class ContentTagCardItemView_OnSelectionChanged_Patch
+    {
+        static void Postfix(ContentTagCardItemView __instance) =>
+            ContentTagCardOverlay.Apply(__instance);
     }
 }
