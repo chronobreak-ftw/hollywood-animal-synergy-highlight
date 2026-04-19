@@ -9,9 +9,6 @@ namespace SynergyHighlightMod.Patches
     {
         static void Postfix(MovieScriptEditorView __instance)
         {
-            Plugin.Log?.LogInfo(
-                "[SynergyHighlight][AutoScenario] MovieScriptEditorView.OnShow observed; scheduling scenario runner."
-            );
             AutomatedBehaviorScenarioTests.TrySchedule(__instance);
         }
     }
@@ -21,9 +18,6 @@ namespace SynergyHighlightMod.Patches
     {
         static void Postfix(MovieScriptEditorView __instance, string tabId)
         {
-            Plugin.Log?.LogInfo(
-                $"[SynergyHighlight][AutoScenario] OnTabSelected('{tabId}') observed; retrying scenario scheduling."
-            );
             AutomatedBehaviorScenarioTests.TrySchedule(__instance);
         }
     }
