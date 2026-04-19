@@ -114,6 +114,21 @@ namespace SynergyHighlightMod.Tests
         }
 
         [Fact]
+        public void Clear_DoesNotFireOnGenresChanged()
+        {
+            SynergyTracker.Clear();
+            SynergyTracker.SetGenre("Action", true);
+
+            bool eventFired = false;
+            Action handler = () => eventFired = true;
+            SynergyTracker.OnGenresChanged += handler;
+            SynergyTracker.Clear();
+            SynergyTracker.OnGenresChanged -= handler;
+
+            Assert.False(eventFired);
+        }
+
+        [Fact]
         public void MultipleSubscribers_CanSubscribeToEvent()
         {
             SynergyTracker.Clear();

@@ -33,7 +33,11 @@ namespace SynergyHighlightMod
 #endif
 
             string streamingAssets = Path.Combine(Application.streamingAssetsPath);
-            SynergyDatabase.Load(streamingAssets, Log);
+            SynergyDatabase.Load(
+                streamingAssets,
+                msg => Log.LogError(msg),
+                msg => Log.LogWarning(msg)
+            );
 
             if (!SynergyDatabase.IsLoaded)
             {

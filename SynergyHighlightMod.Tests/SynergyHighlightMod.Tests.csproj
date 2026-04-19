@@ -8,12 +8,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="xunit" Version="2.9.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8" />
   </ItemGroup>
 
   <!-- Link only the pure-logic files - no BepInEx / Unity / game DLLs needed -->
   <ItemGroup>
+    <Compile
+      Include="..\SynergyHighlightMod\SynergyColorBand.cs"
+      Link="Shared\SynergyColorBand.cs"
+    />
+    <Compile Include="..\SynergyHighlightMod\SynergyDatabase.cs" Link="Shared\SynergyDatabase.cs" />
     <Compile Include="..\SynergyHighlightMod\SynergyLogic.cs" Link="Shared\SynergyLogic.cs" />
     <Compile Include="..\SynergyHighlightMod\SynergyTracker.cs" Link="Shared\SynergyTracker.cs" />
   </ItemGroup>

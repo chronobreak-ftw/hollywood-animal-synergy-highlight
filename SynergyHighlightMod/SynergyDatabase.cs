@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using BepInEx.Logging;
 using Newtonsoft.Json;
 
 namespace SynergyHighlightMod
@@ -11,15 +10,21 @@ namespace SynergyHighlightMod
         private static Dictionary<string, Dictionary<string, float>> _compat;
         private static Dictionary<string, Dictionary<string, (float art, float com)>> _genrePairs;
 
-        public static bool IsLoaded => _compat != null;
+        public static bool IsLoaded => _compat != null && _genrePairs != null;
 
-        public static void Load(string streamingAssetsPath, ManualLogSource log)
+        public static void Load(
+            string streamingAssetsPath,
+            Action<string> logError,
+            Action<string> logWarning = null
+        )
         {
-            LoadCompatibility(streamingAssetsPath, log);
-            LoadGenrePairs(streamingAssetsPath, log);
+            _compat = null;
+            _genrePairs = null;
+            LoadCompatibility(streamingAssetsPath, logError);
+            LoadGenrePairs(streamingAssetsPath, logError, logWarning);
         }
 
-        private static void LoadCompatibility(string root, ManualLogSource log)
+        private static void LoadCompatibility(string root, Action<string> logError)
         {
             try
             {
@@ -49,11 +54,15 @@ namespace SynergyHighlightMod
             }
             catch (Exception ex)
             {
-                log.LogError("[SynergyDB] Failed to load TagCompatibilityData.json: " + ex);
+                logError("[SynergyDB] Failed to load TagCompatibilityData.json: " + ex);
             }
         }
 
-        private static void LoadGenrePairs(string root, ManualLogSource log)
+        private static void LoadGenrePairs(
+            string root,
+            Action<string> logError,
+            Action<string> logWarning
+        )
         {
             try
             {
@@ -92,15 +101,15 @@ namespace SynergyHighlightMod
                     }
                     _genrePairs[outer.Key] = inner;
                 }
-                ValidateGenrePairSymmetry(log);
+                ValidateGenrePairSymmetry(logWarning);
             }
             catch (Exception ex)
             {
-                log.LogError("[SynergyDB] Failed to load GenrePairs.json: " + ex);
+                logError("[SynergyDB] Failed to load GenrePairs.json: " + ex);
             }
         }
 
-        private static void ValidateGenrePairSymmetry(ManualLogSource log)
+        private static void ValidateGenrePairSymmetry(Action<string> logWarning)
         {
             if (_genrePairs == null || _genrePairs.Count == 0)
                 return;
@@ -131,7 +140,7 @@ namespace SynergyHighlightMod
 
             if (asymmetries.Count > 0)
             {
-                log.LogWarning(
+                logWarning?.Invoke(
                     "[SynergyDB] Genre pair asymmetries detected (should be symmetric): "
                         + string.Join("; ", asymmetries)
                 );

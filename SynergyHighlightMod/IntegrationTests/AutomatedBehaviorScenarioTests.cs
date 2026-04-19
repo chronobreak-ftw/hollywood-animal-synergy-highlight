@@ -371,6 +371,48 @@ namespace SynergyHighlightMod
                     Pass("Re-selection check passed for content: overlay restored after deselect.");
             }
 
+            // ---- Phase 8: All visible content cards with setA genres ----
+            _log.LogInfo(
+                "[SynergyHighlight][AutoScenario] Phase 8: all visible content cards check."
+            );
+            yield return SelectTab(view, TagTypes.Content);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
+            AssertAllContentCardOverlays(view);
+
+            // ---- Phase 9: Three genres — overlays update for genre borders, setting, content ----
+            _log.LogInfo("[SynergyHighlight][AutoScenario] Phase 9: three genres.");
+            var setABC = new[] { genreTags[0], genreTags[1], genreTags[2] };
+            yield return ApplyGenreSet(view, genreTags, setABC);
+
+            yield return SelectTab(view, TagTypes.Genre);
+            AssertGenreBordersForList(checkGenres);
+
+            yield return SelectTab(view, TagTypes.Setting);
+            {
+                Color expected = CaptureExpectedOverlayColor(
+                    targetSetting.Id,
+                    SynergyOverlay.OverlayAlphaSetting
+                );
+                bool ok = AssertCardOverlayMatchesSetting(view, targetSetting.Id, expected);
+                if (ok)
+                    Pass("Three-genre setting overlay correct.");
+            }
+
+            yield return SelectTab(view, TagTypes.Content);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
+            {
+                Color expected = CaptureExpectedOverlayColor(
+                    targetContentId,
+                    SynergyOverlay.OverlayAlphaContent
+                );
+                bool ok = AssertCardOverlayMatchesContent(view, targetContentId, expected);
+                if (ok)
+                    Pass("Three-genre content overlay correct.");
+            }
+
+            // Clean up: restore setA so teardown is predictable
+            yield return ApplyGenreSet(view, genreTags, setA);
+
             _log.LogInfo("[SynergyHighlight][AutoScenario] Automated scenario run completed.");
             WasScenarioSuccessful = true;
         }
@@ -614,6 +656,36 @@ namespace SynergyHighlightMod
                     allOk = false;
             }
             return allOk;
+        }
+
+        private static void AssertAllContentCardOverlays(MovieScriptEditorView view)
+        {
+            var cards = GetContentCardsFromSelectorPanel(view);
+            int checked_ = 0;
+            int failed = 0;
+            foreach (var card in cards)
+            {
+                if (!card.gameObject.activeInHierarchy || !card.Interactable)
+                    continue;
+                var tag = Traverse.Create(card).Property("TagData").GetValue<TagData>();
+                if (tag?.Id == null || tag.Selected)
+                    continue;
+
+                Color expected = CaptureExpectedOverlayColor(
+                    tag.Id,
+                    SynergyOverlay.OverlayAlphaContent
+                );
+                if (!AssertOverlayColor(card.gameObject, expected, $"Content:{tag.Id}"))
+                    failed++;
+                checked_++;
+            }
+
+            if (checked_ == 0)
+                _log.LogInfo(
+                    "[SynergyHighlight][AutoScenario] Phase 8: no interactable unselected content cards found."
+                );
+            else if (failed == 0)
+                Pass($"Phase 8: all {checked_} content card overlays correct for current genres.");
         }
 
         private static ToggleImageListItemView FindSettingCard(string tagId)

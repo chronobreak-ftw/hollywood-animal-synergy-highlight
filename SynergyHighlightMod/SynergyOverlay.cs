@@ -22,36 +22,22 @@ namespace SynergyHighlightMod
         private static readonly Color ColorRed = new Color(0.90f, 0.10f, 0.10f);
         private static readonly Color ColorLimeGreen = new Color(0.70f, 1.00f, 0.00f);
 
-        public static Color ScoreToColor(float? score, float overlayAlpha)
-        {
-            if (!score.HasValue)
-                return Clear;
-            float s = score.Value;
-            if (s >= 4.0f)
-                return new Color(ColorGreen.r, ColorGreen.g, ColorGreen.b, overlayAlpha);
-            if (s >= 3.5f)
-                return new Color(ColorYellow.r, ColorYellow.g, ColorYellow.b, overlayAlpha);
-            if (s <= 2.5f)
-                return new Color(ColorRed.r, ColorRed.g, ColorRed.b, overlayAlpha);
-            return Clear;
-        }
+        public static Color ScoreToColor(float? score, float overlayAlpha) =>
+            BandToColor(SynergyColorBand.FromScore(score), overlayAlpha);
 
-        public static Color GenrePairScoreToColor(float? pairSum, float overlayAlpha)
+        public static Color GenrePairScoreToColor(float? pairSum, float overlayAlpha) =>
+            BandToColor(SynergyColorBand.FromGenrePairScore(pairSum), overlayAlpha);
+
+        private static Color BandToColor(ColorBand band, float alpha)
         {
-            if (!pairSum.HasValue)
-                return Clear;
-            float s = pairSum.Value;
-            if (s >= 0.35f)
-                return new Color(ColorGreen.r, ColorGreen.g, ColorGreen.b, overlayAlpha);
-            if (s >= 0.10f)
-                return new Color(
-                    ColorLimeGreen.r,
-                    ColorLimeGreen.g,
-                    ColorLimeGreen.b,
-                    overlayAlpha
-                );
-            if (s <= -0.10f)
-                return new Color(ColorRed.r, ColorRed.g, ColorRed.b, overlayAlpha);
+            if (band == ColorBand.Green)
+                return new Color(ColorGreen.r, ColorGreen.g, ColorGreen.b, alpha);
+            if (band == ColorBand.Yellow)
+                return new Color(ColorYellow.r, ColorYellow.g, ColorYellow.b, alpha);
+            if (band == ColorBand.Red)
+                return new Color(ColorRed.r, ColorRed.g, ColorRed.b, alpha);
+            if (band == ColorBand.LimeGreen)
+                return new Color(ColorLimeGreen.r, ColorLimeGreen.g, ColorLimeGreen.b, alpha);
             return Clear;
         }
 

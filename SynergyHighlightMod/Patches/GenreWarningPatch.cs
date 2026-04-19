@@ -8,6 +8,10 @@ using UnityEngine;
 
 namespace SynergyHighlightMod.Patches
 {
+    // Two patches are needed because genre fraction changes and queue drains are separate events.
+    // OnGenreTagFractionUpdated fires during slider moves (queue may still have pending genres);
+    // CheckGenreQueue fires after the queue drains. Together they cover both paths without
+    // double-firing when the queue is empty at fraction-update time.
     [HarmonyPatch(typeof(MovieScriptEditorView), "OnGenreTagFractionUpdated")]
     static class MovieScriptEditorView_OnGenreTagFractionUpdated_WarningPatch
     {
@@ -43,8 +47,6 @@ namespace SynergyHighlightMod.Patches
         private const float PAIR_SUM_MIN = 0.70f;
         private const float PAIR_FRAC_MIN = 0.35f;
 
-        private const float PAIR_SYNERGY_GREEN_MIN = 0.35f;
-
         private static readonly Color OutlineRed = new Color(1f, 0.15f, 0.15f);
         private static readonly Color OutlineGreen = new Color(0.10f, 0.90f, 0.20f);
 
@@ -63,7 +65,7 @@ namespace SynergyHighlightMod.Patches
                     if (string.IsNullOrEmpty(b))
                         return false;
                     float sum = SynergyDatabase.GetGenrePairSum(a, b);
-                    if (sum < PAIR_SYNERGY_GREEN_MIN)
+                    if (sum < SynergyColorBand.PairGreenMin)
                         return false;
                 }
             }

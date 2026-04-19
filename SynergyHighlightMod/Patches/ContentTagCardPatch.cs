@@ -29,8 +29,6 @@ namespace SynergyHighlightMod.Patches
 
         private static void RefreshAllTrackedCards()
         {
-            var log = BepInEx.Logging.Logger.CreateLogSource("Synergy Highlight");
-
             foreach (var card in new List<ContentTagCardItemView>(_trackedCards))
             {
                 if (card != null)

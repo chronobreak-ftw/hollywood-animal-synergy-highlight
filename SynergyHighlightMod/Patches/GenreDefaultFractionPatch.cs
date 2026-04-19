@@ -45,8 +45,15 @@ namespace SynergyHighlightMod.Patches
                 .Create(gameVariables)
                 .Field("data")
                 .GetValue<Dictionary<string, string>>();
-            if (data == null || !data.ContainsKey(STEPS_KEY))
+            if (data == null)
                 return;
+            if (!data.ContainsKey(STEPS_KEY))
+            {
+                Plugin.Log?.LogWarning(
+                    $"[SynergyHighlight] '{STEPS_KEY}' not found in gameVariables.data; default fraction patch skipped."
+                );
+                return;
+            }
 
             _savedSteps = data[STEPS_KEY];
             data[STEPS_KEY] = desiredSteps.ToString();
