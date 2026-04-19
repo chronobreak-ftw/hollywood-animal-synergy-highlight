@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="xunit" Version="2.9.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8" />
+  </ItemGroup>
+
+  <!-- Link only the pure-logic file — no BepInEx / Unity / game DLLs needed -->
+  <ItemGroup>
+    <Compile Include="..\SynergyHighlightMod\SynergyLogic.cs" Link="Shared\SynergyLogic.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,70 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Set GameDir and BepInExDir in Directory.Build.props next to the .sln (see Directory.Build.props.example).
+    That file is gitignored so machine-specific paths are not committed.
+  -->
+  <Target Name="EnsureGamePaths" BeforeTargets="BeforeBuild">
+    <Error
+      Condition="'$(GameDir)' == '' or '$(BepInExDir)' == ''"
+      Text="Copy Directory.Build.props.example to Directory.Build.props (repo root) and set GameDir and BepInExDir for your install." />
+  </Target>
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>SynergyHighlightMod</AssemblyName>
+    <RootNamespace>SynergyHighlightMod</RootNamespace>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ManagedDir>$(GameDir)\Hollywood Animal_Data\Managed</ManagedDir>
+  </PropertyGroup>
+
+  <ItemGroup Label="BepInEx">
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExDir)\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExDir)\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Label="UnityEngine">
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Label="Game">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(ManagedDir)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- PostBuildEvent expands $(TargetPath) too early in SDK-style projects; use a target. -->
+  <Target Name="CopyPluginToGame" AfterTargets="Build">
+    <Copy
+      SourceFiles="$(TargetPath)"
+      DestinationFolder="$(GameDir)\BepInEx\plugins"
+      SkipUnchangedFiles="true"
+      Condition="Exists('$(GameDir)\BepInEx\plugins')"
+    />
+  </Target>
+</Project>
