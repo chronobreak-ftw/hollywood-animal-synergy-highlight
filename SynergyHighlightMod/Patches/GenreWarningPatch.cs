@@ -92,13 +92,10 @@ namespace SynergyHighlightMod.Patches
                 return;
             }
 
-            // One genre: no GenrePairs.json bonus — MovieProcessor uses unpaired tag Art/Com if the slice
-            // is at least GenresUnpairedMin (see ProcessGenres fall-through). Green when that bar is met.
             if (genres.Count == 1)
             {
                 float unpairedMin = gameVariables != null ? gameVariables.GenresUnpairedMin : 0.5f;
-                bool fullUnpairedBonus =
-                    genres[0] != null && genres[0].Fraction + 0.0001f >= unpairedMin;
+                bool fullUnpairedBonus = genres[0]?.Fraction + 0.0001f >= unpairedMin;
                 SynergyOverlay.ApplyBorder(
                     sliderMB.gameObject,
                     fullUnpairedBonus ? OutlineGreen : Color.clear

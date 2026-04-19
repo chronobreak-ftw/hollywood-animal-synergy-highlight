@@ -46,7 +46,6 @@ namespace SynergyHighlightMod
                             inner[kv.Key] = f;
                     _compat[outer.Key] = inner;
                 }
-                log.LogInfo($"[SynergyDB] Compatibility: {_compat.Count} tag entries.");
             }
             catch (Exception ex)
             {
@@ -93,11 +92,49 @@ namespace SynergyHighlightMod
                     }
                     _genrePairs[outer.Key] = inner;
                 }
-                log.LogInfo($"[SynergyDB] GenrePairs: {_genrePairs.Count} genre entries.");
+                ValidateGenrePairSymmetry(log);
             }
             catch (Exception ex)
             {
                 log.LogError("[SynergyDB] Failed to load GenrePairs.json: " + ex);
+            }
+        }
+
+        private static void ValidateGenrePairSymmetry(ManualLogSource log)
+        {
+            if (_genrePairs == null || _genrePairs.Count == 0)
+                return;
+
+            var asymmetries = new List<string>();
+            foreach (var outerKv in _genrePairs)
+            {
+                string g1 = outerKv.Key;
+                foreach (var innerKv in outerKv.Value)
+                {
+                    string g2 = innerKv.Key;
+                    (float art, float com) forward = innerKv.Value;
+
+                    if (
+                        _genrePairs.TryGetValue(g2, out var g2Inner)
+                        && g2Inner.TryGetValue(g1, out var backward)
+                    )
+                    {
+                        if (forward != backward)
+                        {
+                            asymmetries.Add(
+                                $"{g1}↔{g2}: ({forward.art}/{forward.com}) vs ({backward.art}/{backward.com})"
+                            );
+                        }
+                    }
+                }
+            }
+
+            if (asymmetries.Count > 0)
+            {
+                log.LogWarning(
+                    "[SynergyDB] Genre pair asymmetries detected (should be symmetric): "
+                        + string.Join("; ", asymmetries)
+                );
             }
         }
 

@@ -28,7 +28,7 @@ namespace SynergyHighlightMod.Patches
         {
             var tagData = Traverse.Create(instance).Property("TagData").GetValue<TagData>();
 
-            if (tagData == null)
+            if (tagData?.Id == null)
             {
                 SynergyOverlay.Remove(instance.gameObject);
                 return;

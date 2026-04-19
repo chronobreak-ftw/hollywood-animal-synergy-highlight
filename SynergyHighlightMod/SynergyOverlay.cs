@@ -17,6 +17,10 @@ namespace SynergyHighlightMod
         public const float OverlayAlphaContent = 0.35f;
 
         private static readonly Color Clear = new Color(0f, 0f, 0f, 0f);
+        private static readonly Color ColorGreen = new Color(0.10f, 0.90f, 0.20f);
+        private static readonly Color ColorYellow = new Color(0.95f, 0.95f, 0.40f);
+        private static readonly Color ColorRed = new Color(0.90f, 0.10f, 0.10f);
+        private static readonly Color ColorLimeGreen = new Color(0.70f, 1.00f, 0.00f);
 
         public static Color ScoreToColor(float? score, float overlayAlpha)
         {
@@ -24,12 +28,12 @@ namespace SynergyHighlightMod
                 return Clear;
             float s = score.Value;
             if (s >= 4.0f)
-                return new Color(0.10f, 0.90f, 0.20f, overlayAlpha); // Green
+                return new Color(ColorGreen.r, ColorGreen.g, ColorGreen.b, overlayAlpha);
             if (s >= 3.5f)
-                return new Color(0.95f, 0.95f, 0.40f, overlayAlpha); // Yellow
+                return new Color(ColorYellow.r, ColorYellow.g, ColorYellow.b, overlayAlpha);
             if (s <= 2.5f)
-                return new Color(0.90f, 0.10f, 0.10f, overlayAlpha); // Red
-            return Clear; // 2.6–3.4 → neutral, no tint
+                return new Color(ColorRed.r, ColorRed.g, ColorRed.b, overlayAlpha);
+            return Clear;
         }
 
         public static Color GenrePairScoreToColor(float? pairSum, float overlayAlpha)
@@ -38,11 +42,16 @@ namespace SynergyHighlightMod
                 return Clear;
             float s = pairSum.Value;
             if (s >= 0.35f)
-                return new Color(0.10f, 0.90f, 0.20f, overlayAlpha);
+                return new Color(ColorGreen.r, ColorGreen.g, ColorGreen.b, overlayAlpha);
             if (s >= 0.10f)
-                return new Color(0.70f, 1.00f, 0.00f, overlayAlpha);
+                return new Color(
+                    ColorLimeGreen.r,
+                    ColorLimeGreen.g,
+                    ColorLimeGreen.b,
+                    overlayAlpha
+                );
             if (s <= -0.10f)
-                return new Color(0.90f, 0.10f, 0.10f, overlayAlpha);
+                return new Color(ColorRed.r, ColorRed.g, ColorRed.b, overlayAlpha);
             return Clear;
         }
 

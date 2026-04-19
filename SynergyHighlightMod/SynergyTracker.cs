@@ -24,9 +24,6 @@ namespace SynergyHighlightMod
         public static void Clear()
         {
             _genres.Clear();
-#if DEBUG
-            Plugin.Log?.LogInfo("[Tracker] Cleared.");
-#endif
         }
     }
 }

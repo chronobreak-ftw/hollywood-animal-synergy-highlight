@@ -12,7 +12,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8" />
   </ItemGroup>
 
-  <!-- Link only the pure-logic file — no BepInEx / Unity / game DLLs needed -->
+  <!-- Link only the pure-logic file - no BepInEx / Unity / game DLLs needed -->
   <ItemGroup>
     <Compile Include="..\SynergyHighlightMod\SynergyLogic.cs" Link="Shared\SynergyLogic.cs" />
   </ItemGroup>

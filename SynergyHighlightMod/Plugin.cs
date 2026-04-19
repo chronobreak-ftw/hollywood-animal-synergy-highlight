@@ -18,6 +18,15 @@ namespace SynergyHighlightMod
             string streamingAssets = Path.Combine(Application.streamingAssetsPath);
             SynergyDatabase.Load(streamingAssets, Log);
 
+            if (!SynergyDatabase.IsLoaded)
+            {
+                Log.LogError(
+                    "[SynergyHighlight] WARNING: Failed to load synergy data files. "
+                        + "Verify TagCompatibilityData.json and GenrePairs.json exist in "
+                        + $"{streamingAssets}\\Data\\Configs\\. Mod will not function correctly."
+                );
+            }
+
             new Harmony(PluginInfo.GUID).PatchAll();
 
             Log.LogInfo($"{PluginInfo.Name} v{PluginInfo.Version} loaded.");
