@@ -86,6 +86,9 @@ namespace SynergyHighlightMod.Patches
                 .GetValue<GameVariables>();
 
             var genres = Traverse.Create(movieWrapper).Property("Genres").GetValue<List<TagData>>();
+#if DEBUG
+            LiveBehaviorAssertions.ValidateTrackerVsMovieGenres(instance);
+#endif
             if (genres == null || genres.Count == 0)
             {
                 SynergyOverlay.ApplyBorder(sliderMB.gameObject, Color.clear);

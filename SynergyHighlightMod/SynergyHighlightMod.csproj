@@ -6,7 +6,8 @@
   <Target Name="EnsureGamePaths" BeforeTargets="BeforeBuild">
     <Error
       Condition="'$(GameDir)' == '' or '$(BepInExDir)' == ''"
-      Text="Copy Directory.Build.props.example to Directory.Build.props (repo root) and set GameDir and BepInExDir for your install." />
+      Text="Copy Directory.Build.props.example to Directory.Build.props (repo root) and set GameDir and BepInExDir for your install."
+    />
   </Target>
 
   <PropertyGroup>
@@ -20,6 +21,11 @@
   <PropertyGroup>
     <ManagedDir>$(GameDir)\Hollywood Animal_Data\Managed</ManagedDir>
   </PropertyGroup>
+
+  <!-- Test harness code is debug-only and excluded from release binaries. -->
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <Compile Remove="IntegrationTests\**\*.cs" />
+  </ItemGroup>
 
   <ItemGroup Label="BepInEx">
     <Reference Include="BepInEx">
