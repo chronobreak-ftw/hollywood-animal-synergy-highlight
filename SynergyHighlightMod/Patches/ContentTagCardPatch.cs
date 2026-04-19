@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Data.GameObject;
 using HarmonyLib;
 using UI.Common.Lists.ItemView;
@@ -11,6 +12,33 @@ namespace SynergyHighlightMod.Patches
         private static readonly Type ContentTagSelectorPanelType = Type.GetType(
             "UI.Common.SubPanels.ContentTagSelectorPanel, Assembly-CSharp"
         );
+
+        private static readonly HashSet<ContentTagCardItemView> _trackedCards =
+            new HashSet<ContentTagCardItemView>();
+
+        private static bool _subscribed = false;
+
+        private static void EnsureSubscribed()
+        {
+            if (!_subscribed)
+            {
+                SynergyTracker.OnGenresChanged += RefreshAllTrackedCards;
+                _subscribed = true;
+            }
+        }
+
+        private static void RefreshAllTrackedCards()
+        {
+            var log = BepInEx.Logging.Logger.CreateLogSource("Synergy Highlight");
+
+            foreach (var card in new List<ContentTagCardItemView>(_trackedCards))
+            {
+                if (card != null)
+                {
+                    Apply(card);
+                }
+            }
+        }
 
         private static bool IsUnderContentTagSelectorPanel(Transform t)
         {
@@ -26,37 +54,54 @@ namespace SynergyHighlightMod.Patches
 
         internal static void Apply(ContentTagCardItemView instance)
         {
-            var tagData = Traverse.Create(instance).Property("TagData").GetValue<TagData>();
-
-            if (tagData?.Id == null)
+            try
             {
-                SynergyOverlay.Remove(instance.gameObject);
-                return;
-            }
+                EnsureSubscribed();
 
-            if (tagData.Selected && IsUnderContentTagSelectorPanel(instance.transform))
+                var tagData = Traverse.Create(instance).Property("TagData").GetValue<TagData>();
+
+                if (tagData?.Id == null)
+                {
+                    SynergyOverlay.Remove(instance.gameObject);
+                    _trackedCards.Remove(instance);
+                    return;
+                }
+
+                _trackedCards.Add(instance);
+
+                if (tagData.Selected && IsUnderContentTagSelectorPanel(instance.transform))
+                {
+                    SynergyOverlay.Remove(instance.gameObject);
+                    return;
+                }
+
+                if (!instance.Interactable)
+                {
+                    SynergyOverlay.Apply(instance.gameObject, Color.clear);
+                    return;
+                }
+
+                var genres = SynergyTracker.SelectedGenreIds;
+
+                if (genres.Count == 0)
+                {
+                    SynergyOverlay.Apply(instance.gameObject, Color.clear);
+                    return;
+                }
+
+                float? score = SynergyDatabase.GetSynergyScore(tagData.Id, genres);
+                Color color = SynergyOverlay.ScoreToColor(
+                    score,
+                    SynergyOverlay.OverlayAlphaContent
+                );
+
+                SynergyOverlay.Apply(instance.gameObject, color);
+            }
+            catch (System.Exception ex)
             {
-                SynergyOverlay.Remove(instance.gameObject);
-                return;
+                var log = BepInEx.Logging.Logger.CreateLogSource("Synergy Highlight");
+                log.LogError($"[ContentTagCardOverlay] Exception in Apply: {ex}");
             }
-
-            if (!instance.Interactable)
-            {
-                SynergyOverlay.Apply(instance.gameObject, Color.clear);
-                return;
-            }
-
-            var genres = SynergyTracker.SelectedGenreIds;
-
-            if (genres.Count == 0)
-            {
-                SynergyOverlay.Apply(instance.gameObject, Color.clear);
-                return;
-            }
-
-            float? score = SynergyDatabase.GetSynergyScore(tagData.Id, genres);
-            Color color = SynergyOverlay.ScoreToColor(score, SynergyOverlay.OverlayAlphaContent);
-            SynergyOverlay.Apply(instance.gameObject, color);
         }
     }
 

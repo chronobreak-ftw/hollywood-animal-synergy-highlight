@@ -1,3 +1,4 @@
+using System;
 using Data.GameObject;
 using HarmonyLib;
 using PP.OptimizedList;
@@ -25,40 +26,56 @@ namespace SynergyHighlightMod.Patches
 
     static class GenreTagViewPatchHelper
     {
+        private static BepInEx.Logging.ManualLogSource _log;
+
+        private static BepInEx.Logging.ManualLogSource GetLog()
+        {
+            if (_log == null)
+                _log = BepInEx.Logging.Logger.CreateLogSource("Synergy Highlight");
+            return _log;
+        }
+
         internal static void SyncAndColor(GenreTagItemView instance)
         {
-            var data = Traverse.Create(instance).Property("Data").GetValue<ItemContainerData>();
-            if (data == null)
-                return;
-
-            var display = data.GetData<GenreTagItemView.GenreDisplayData>();
-            if (display?.tag == null)
-                return;
-
-            string genreId = display.tag.Id;
-            bool isSelected = display.tag.Selected;
-
-            SynergyTracker.SetGenre(genreId, isSelected);
-
-            if (isSelected)
+            try
             {
-                SynergyOverlay.ApplyBorder(instance.gameObject, UnityEngine.Color.clear);
-                return;
-            }
+                var data = Traverse.Create(instance).Property("Data").GetValue<ItemContainerData>();
+                if (data == null)
+                    return;
 
-            var selected = SynergyTracker.SelectedGenreIds;
-            if (selected.Count == 0)
+                var display = data.GetData<GenreTagItemView.GenreDisplayData>();
+                if (display?.tag == null)
+                    return;
+
+                string genreId = display.tag.Id;
+                bool isSelected = display.tag.Selected;
+
+                SynergyTracker.SetGenre(genreId, isSelected);
+
+                if (isSelected)
+                {
+                    SynergyOverlay.ApplyBorder(instance.gameObject, UnityEngine.Color.clear);
+                    return;
+                }
+
+                var selected = SynergyTracker.SelectedGenreIds;
+                if (selected.Count == 0)
+                {
+                    SynergyOverlay.ApplyBorder(instance.gameObject, UnityEngine.Color.clear);
+                    return;
+                }
+
+                float? pairScore = SynergyDatabase.GetBestGenrePairScore(genreId, selected);
+                UnityEngine.Color color = SynergyOverlay.GenrePairScoreToColor(
+                    pairScore,
+                    SynergyOverlay.OverlayAlphaGenre
+                );
+                SynergyOverlay.ApplyBorder(instance.gameObject, color);
+            }
+            catch (Exception ex)
             {
-                SynergyOverlay.ApplyBorder(instance.gameObject, UnityEngine.Color.clear);
-                return;
+                GetLog().LogError($"[GenreTagViewPatch] Exception: {ex}");
             }
-
-            float? pairScore = SynergyDatabase.GetBestGenrePairScore(genreId, selected);
-            UnityEngine.Color color = SynergyOverlay.GenrePairScoreToColor(
-                pairScore,
-                SynergyOverlay.OverlayAlphaGenre
-            );
-            SynergyOverlay.ApplyBorder(instance.gameObject, color);
         }
     }
 }
