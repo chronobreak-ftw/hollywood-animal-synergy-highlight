@@ -65,9 +65,6 @@ namespace SynergyHighlightMod.Patches
             if (genres.Count == 0)
             {
                 SynergyOverlay.Apply(instance.gameObject, Color.clear);
-#if DEBUG
-                LiveBehaviorAssertions.ValidateSettingCardColor(instance, tagData.Id);
-#endif
                 return;
             }
 
@@ -75,9 +72,6 @@ namespace SynergyHighlightMod.Patches
             Color color = SynergyOverlay.ScoreToColor(score, SynergyOverlay.OverlayAlphaSetting);
 
             SynergyOverlay.Apply(instance.gameObject, color);
-#if DEBUG
-            LiveBehaviorAssertions.ValidateSettingCardColor(instance, tagData.Id);
-#endif
         }
     }
 }

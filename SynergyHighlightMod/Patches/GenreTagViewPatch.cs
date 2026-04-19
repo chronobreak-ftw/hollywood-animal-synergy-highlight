@@ -55,9 +55,6 @@ namespace SynergyHighlightMod.Patches
                 if (isSelected)
                 {
                     SynergyOverlay.ApplyBorder(instance.gameObject, UnityEngine.Color.clear);
-#if DEBUG
-                    LiveBehaviorAssertions.ValidateGenreCardBorder(instance, genreId, isSelected);
-#endif
                     return;
                 }
 
@@ -65,9 +62,6 @@ namespace SynergyHighlightMod.Patches
                 if (selected.Count == 0)
                 {
                     SynergyOverlay.ApplyBorder(instance.gameObject, UnityEngine.Color.clear);
-#if DEBUG
-                    LiveBehaviorAssertions.ValidateGenreCardBorder(instance, genreId, isSelected);
-#endif
                     return;
                 }
 
@@ -77,9 +71,6 @@ namespace SynergyHighlightMod.Patches
                     SynergyOverlay.OverlayAlphaGenre
                 );
                 SynergyOverlay.ApplyBorder(instance.gameObject, color);
-#if DEBUG
-                LiveBehaviorAssertions.ValidateGenreCardBorder(instance, genreId, isSelected);
-#endif
             }
             catch (Exception ex)
             {

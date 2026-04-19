@@ -21,6 +21,7 @@ namespace SynergyHighlightMod
         private static bool _enabled;
         private static bool _isRunning;
         private static bool _completedForSession;
+        private static ItemContainerData _savedContentSelectorData;
 
         internal static void Initialize(BepInEx.Logging.ManualLogSource log, bool enabled)
         {
@@ -28,6 +29,7 @@ namespace SynergyHighlightMod
             _enabled = enabled;
             _isRunning = false;
             _completedForSession = false;
+            _savedContentSelectorData = null;
             if (_enabled)
             {
                 _log.LogInfo(
@@ -59,7 +61,6 @@ namespace SynergyHighlightMod
             }
 
             _isRunning = true;
-            // Run on the editor view itself to avoid plugin-instance lifecycle edge cases.
             view.StartCoroutine(RunSafe(view));
             _log?.LogInfo("[SynergyHighlight][AutoScenario] Coroutine scheduled successfully.");
         }
@@ -156,98 +157,218 @@ namespace SynergyHighlightMod
 
             var setA = new[] { genreTags[0], genreTags[1] };
             var setB = new[] { genreTags[2], genreTags[3] };
-
+            var checkGenres = genreTags.Take(4).ToList();
             TagData targetSetting = settingTags[0];
             string targetContentId = null;
 
-            yield return ApplyGenreSet(view, genreTags, setA);
+            // ---- Phase 1: Zero genres — setting and content overlays must be clear ----
+            _log.LogInfo("[SynergyHighlight][AutoScenario] Phase 1: zero genres.");
+            yield return ApplyGenreSet(view, genreTags, Array.Empty<TagData>());
+
             yield return SelectTab(view, TagTypes.Setting);
-            Color settingA = CaptureExpectedOverlayColor(
-                targetSetting.Id,
-                SynergyOverlay.OverlayAlphaSetting
-            );
+            AssertCardOverlayMatchesSetting(view, targetSetting.Id, Color.clear);
 
             yield return SelectTab(view, TagTypes.Content);
             yield return EnsureContentCardsVisible(view);
             targetContentId = FindFirstVisibleContentCardTagId(view);
             if (string.IsNullOrEmpty(targetContentId))
             {
-                int availableCards = GetContentCardsFromSelectorPanel(view).Count;
-                int totalCardsInScene = UnityEngine
+                int available = GetContentCardsFromSelectorPanel(view).Count;
+                int sceneTotal = UnityEngine
                     .Object.FindObjectsOfType<ContentTagCardItemView>(true)
                     .Length;
                 Fail(
-                    $"No visible content card found on Content tab. ListCards={availableCards}, SceneCards={totalCardsInScene}."
+                    $"No visible content card found on Content tab. ListCards={available}, SceneCards={sceneTotal}."
                 );
                 yield break;
             }
+            AssertCardOverlayMatchesContent(view, targetContentId, Color.clear);
+
+            // ---- Phase 2: Single genre — overlays must reflect one-genre score ----
+            _log.LogInfo("[SynergyHighlight][AutoScenario] Phase 2: single genre.");
+            yield return ApplyGenreSet(view, genreTags, new[] { setA[0] });
+
+            yield return SelectTab(view, TagTypes.Setting);
+            AssertCardOverlayMatchesSetting(
+                view,
+                targetSetting.Id,
+                CaptureExpectedOverlayColor(targetSetting.Id, SynergyOverlay.OverlayAlphaSetting)
+            );
+
+            yield return SelectTab(view, TagTypes.Content);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
+            AssertCardOverlayMatchesContent(
+                view,
+                targetContentId,
+                CaptureExpectedOverlayColor(targetContentId, SynergyOverlay.OverlayAlphaContent)
+            );
+
+            // ---- Phase 3: Two genres (setA) — genre borders, setting overlay, content overlay ----
+            _log.LogInfo(
+                "[SynergyHighlight][AutoScenario] Phase 3: two genres + border check (setA)."
+            );
+            yield return ApplyGenreSet(view, genreTags, setA);
+
+            yield return SelectTab(view, TagTypes.Genre);
+            AssertGenreBordersForList(checkGenres);
+
+            yield return SelectTab(view, TagTypes.Setting);
+            Color settingA = CaptureExpectedOverlayColor(
+                targetSetting.Id,
+                SynergyOverlay.OverlayAlphaSetting
+            );
+            AssertCardOverlayMatchesSetting(view, targetSetting.Id, settingA);
+
+            yield return SelectTab(view, TagTypes.Content);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
             Color contentA = CaptureExpectedOverlayColor(
                 targetContentId,
                 SynergyOverlay.OverlayAlphaContent
             );
+            AssertCardOverlayMatchesContent(view, targetContentId, contentA);
 
+            // ---- Phase 4: Switch to setB — stale-color check A→B ----
+            _log.LogInfo(
+                "[SynergyHighlight][AutoScenario] Phase 4: switch to setB, stale-color check."
+            );
             yield return SelectTab(view, TagTypes.Genre);
             yield return ApplyGenreSet(view, genreTags, setB);
+            AssertGenreBordersForList(checkGenres);
 
             yield return SelectTab(view, TagTypes.Setting);
             Color settingB = CaptureExpectedOverlayColor(
                 targetSetting.Id,
                 SynergyOverlay.OverlayAlphaSetting
             );
-            bool settingOverlayOk = AssertCardOverlayMatchesSetting(
-                view,
-                targetSetting.Id,
-                settingB
-            );
+            {
+                bool ok = AssertCardOverlayMatchesSetting(view, targetSetting.Id, settingB);
+                if (ok && settingA != settingB)
+                    Pass(
+                        "Setting stale-color check passed: overlay updated when switching genres A→B."
+                    );
+                else if (ok)
+                    _log.LogInfo(
+                        "[SynergyHighlight][AutoScenario] Setting A→B produced same color (correctness still validated)."
+                    );
+            }
 
             yield return SelectTab(view, TagTypes.Content);
-            yield return EnsureContentCardsVisible(view);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
             Color contentB = CaptureExpectedOverlayColor(
                 targetContentId,
                 SynergyOverlay.OverlayAlphaContent
             );
-            bool contentOverlayOk = AssertCardOverlayMatchesContent(
-                view,
-                targetContentId,
-                contentB
+            {
+                bool ok = AssertCardOverlayMatchesContent(view, targetContentId, contentB);
+                if (ok && contentA != contentB)
+                    Pass(
+                        "Content stale-color check passed: overlay updated when switching genres A→B."
+                    );
+                else if (ok)
+                    _log.LogInfo(
+                        "[SynergyHighlight][AutoScenario] Content A→B produced same color (correctness still validated)."
+                    );
+            }
+
+            // ---- Phase 5: Switch back to setA — stale-color check B→A ----
+            _log.LogInfo(
+                "[SynergyHighlight][AutoScenario] Phase 5: switch back to setA, stale-color check."
             );
+            yield return SelectTab(view, TagTypes.Genre);
+            yield return ApplyGenreSet(view, genreTags, setA);
 
-            if (settingOverlayOk && settingA != settingB)
-                Pass("Stale color check passed for setting card.");
-            else if (settingOverlayOk)
-                _log.LogInfo(
-                    "[SynergyHighlight][AutoScenario] Setting sample produced same color for both genre sets (still validated correctness)."
-                );
+            yield return SelectTab(view, TagTypes.Setting);
+            Color settingA2 = CaptureExpectedOverlayColor(
+                targetSetting.Id,
+                SynergyOverlay.OverlayAlphaSetting
+            );
+            {
+                bool ok = AssertCardOverlayMatchesSetting(view, targetSetting.Id, settingA2);
+                if (ok && settingB != settingA2)
+                    Pass(
+                        "Setting stale-color check passed: overlay updated when switching genres B→A."
+                    );
+                else if (ok)
+                    _log.LogInfo(
+                        "[SynergyHighlight][AutoScenario] Setting B→A produced same color (correctness still validated)."
+                    );
+            }
 
-            if (contentOverlayOk && contentA != contentB)
-                Pass("Stale color check passed for content card.");
-            else if (contentOverlayOk)
-                _log.LogInfo(
-                    "[SynergyHighlight][AutoScenario] Content sample produced same color for both genre sets (still validated correctness)."
-                );
+            yield return SelectTab(view, TagTypes.Content);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
+            Color contentA2 = CaptureExpectedOverlayColor(
+                targetContentId,
+                SynergyOverlay.OverlayAlphaContent
+            );
+            {
+                bool ok = AssertCardOverlayMatchesContent(view, targetContentId, contentA2);
+                if (ok && contentB != contentA2)
+                    Pass(
+                        "Content stale-color check passed: overlay updated when switching genres B→A."
+                    );
+                else if (ok)
+                    _log.LogInfo(
+                        "[SynergyHighlight][AutoScenario] Content B→A produced same color (correctness still validated)."
+                    );
+            }
 
+            // ---- Phase 6: Deselect all — tracker empty, all overlays clear ----
+            _log.LogInfo("[SynergyHighlight][AutoScenario] Phase 6: deselect all.");
             yield return SelectTab(view, TagTypes.Genre);
             yield return ApplyGenreSet(view, genreTags, Array.Empty<TagData>());
+
+            AssertGenreBordersForList(checkGenres);
 
             var movieWrapper = Traverse.Create(view).Field("movieWrapper").GetValue<object>();
             var movieGenres = Traverse
                 .Create(movieWrapper)
                 .Property("Genres")
                 .GetValue<List<TagData>>();
-
             if (
                 movieGenres != null
                 && movieGenres.Count == 0
                 && SynergyTracker.SelectedGenreIds.Count == 0
             )
-            {
                 Pass("Deselection check passed (movie genres and tracker both empty).");
-            }
             else
-            {
                 Fail(
                     $"Deselection mismatch. MovieGenres={movieGenres?.Count ?? -1}, TrackerGenres={SynergyTracker.SelectedGenreIds.Count}"
                 );
+
+            yield return SelectTab(view, TagTypes.Setting);
+            AssertCardOverlayMatchesSetting(view, targetSetting.Id, Color.clear);
+
+            yield return SelectTab(view, TagTypes.Content);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
+            AssertCardOverlayMatchesContent(view, targetContentId, Color.clear);
+
+            // ---- Phase 7: Re-select setA — overlays restored, no stale state from deselect ----
+            _log.LogInfo(
+                "[SynergyHighlight][AutoScenario] Phase 7: re-select setA, verify no stale state."
+            );
+            yield return ApplyGenreSet(view, genreTags, setA);
+
+            yield return SelectTab(view, TagTypes.Setting);
+            {
+                Color expected = CaptureExpectedOverlayColor(
+                    targetSetting.Id,
+                    SynergyOverlay.OverlayAlphaSetting
+                );
+                bool ok = AssertCardOverlayMatchesSetting(view, targetSetting.Id, expected);
+                if (ok)
+                    Pass("Re-selection check passed for setting: overlay restored after deselect.");
+            }
+
+            yield return SelectTab(view, TagTypes.Content);
+            yield return EnsureTargetContentCardVisible(view, targetContentId);
+            {
+                Color expected = CaptureExpectedOverlayColor(
+                    targetContentId,
+                    SynergyOverlay.OverlayAlphaContent
+                );
+                bool ok = AssertCardOverlayMatchesContent(view, targetContentId, expected);
+                if (ok)
+                    Pass("Re-selection check passed for content: overlay restored after deselect.");
             }
 
             _log.LogInfo("[SynergyHighlight][AutoScenario] Automated scenario run completed.");
@@ -311,6 +432,7 @@ namespace SynergyHighlightMod
             Traverse.Create(list).Method("UpdateViews", new object[] { false }).GetValue();
         }
 
+        // Opens the content selector and saves the slot data used, so subsequent calls can reopen the same slot.
         private static IEnumerator EnsureContentCardsVisible(MovieScriptEditorView view)
         {
             if (!string.IsNullOrEmpty(FindFirstVisibleContentCardTagId(view)))
@@ -328,6 +450,7 @@ namespace SynergyHighlightMod
                 .GetValue<ItemContainerData>();
             if (selectorData != null)
             {
+                _savedContentSelectorData = selectorData;
                 Traverse
                     .Create(view)
                     .Method("OnContentCardSlotSelected", new object[] { selectorData })
@@ -338,6 +461,32 @@ namespace SynergyHighlightMod
                 yield return null;
 
             LogContentCardCandidates(view, "after opening content selector");
+        }
+
+        // Reopens the same slot used during the first EnsureContentCardsVisible call so we can
+        // find the same target card even when the active slot has changed between tab visits.
+        private static IEnumerator EnsureTargetContentCardVisible(
+            MovieScriptEditorView view,
+            string targetId
+        )
+        {
+            if (FindContentCard(view, targetId) != null)
+                yield break;
+
+            LogContentCardCandidates(view, "before re-opening content selector");
+
+            if (_savedContentSelectorData != null)
+            {
+                Traverse
+                    .Create(view)
+                    .Method("OnContentCardSlotSelected", new object[] { _savedContentSelectorData })
+                    .GetValue();
+
+                for (int i = 0; i < 20; i++)
+                    yield return null;
+            }
+
+            LogContentCardCandidates(view, "after re-opening content selector");
         }
 
         private static IEnumerator ApplyGenreSet(
@@ -398,6 +547,18 @@ namespace SynergyHighlightMod
             return SynergyOverlay.ScoreToColor(score, alpha);
         }
 
+        private static Color CaptureExpectedBorderColor(string genreId)
+        {
+            var selected = SynergyTracker.SelectedGenreIds;
+            if (selected.Count == 0)
+                return Color.clear;
+            float? pairScore = SynergyDatabase.GetBestGenrePairScore(genreId, selected);
+            return SynergyOverlay.GenrePairScoreToColor(
+                pairScore,
+                SynergyOverlay.OverlayAlphaGenre
+            );
+        }
+
         private static bool AssertCardOverlayMatchesSetting(
             MovieScriptEditorView view,
             string tagId,
@@ -428,6 +589,33 @@ namespace SynergyHighlightMod
             return AssertOverlayColor(card.gameObject, expected, $"Content:{tagId}");
         }
 
+        private static bool AssertGenreBordersForList(List<TagData> genres)
+        {
+            var selected = SynergyTracker.SelectedGenreIds;
+            bool allOk = true;
+            foreach (var genre in genres)
+            {
+                var card = FindGenreCard(genre.Id);
+                if (card == null)
+                {
+                    _log.LogInfo(
+                        $"[SynergyHighlight][AutoScenario] GenreBorder: card not found for '{genre.Id}' (may not be visible), skipping."
+                    );
+                    continue;
+                }
+
+                Color expected;
+                if (genre.Selected || selected.Count == 0)
+                    expected = Color.clear;
+                else
+                    expected = CaptureExpectedBorderColor(genre.Id);
+
+                if (!AssertBorderColor(card.gameObject, expected, $"GenreBorder:{genre.Id}"))
+                    allOk = false;
+            }
+            return allOk;
+        }
+
         private static ToggleImageListItemView FindSettingCard(string tagId)
         {
             foreach (var v in UnityEngine.Object.FindObjectsOfType<ToggleImageListItemView>(true))
@@ -451,6 +639,21 @@ namespace SynergyHighlightMod
             {
                 var tag = Traverse.Create(v).Property("TagData").GetValue<TagData>();
                 if (tag != null && string.Equals(tag.Id, tagId, StringComparison.OrdinalIgnoreCase))
+                    return v;
+            }
+            return null;
+        }
+
+        private static GenreTagItemView FindGenreCard(string tagId)
+        {
+            foreach (var v in UnityEngine.Object.FindObjectsOfType<GenreTagItemView>(true))
+            {
+                var data = Traverse.Create(v).Property("Data").GetValue<ItemContainerData>();
+                var display = data?.GetData<GenreTagItemView.GenreDisplayData>();
+                if (
+                    display?.tag != null
+                    && string.Equals(display.tag.Id, tagId, StringComparison.OrdinalIgnoreCase)
+                )
                     return v;
             }
             return null;
@@ -588,6 +791,60 @@ namespace SynergyHighlightMod
             }
 
             Pass($"{context} overlay matches expected genres.");
+            return true;
+        }
+
+        // Border strips use an internal BORDER_ALPHA (0.90f) regardless of the passed base color alpha,
+        // so we compare RGB only to avoid false failures from the alpha difference.
+        private static bool AssertBorderColor(GameObject cardGO, Color expected, string context)
+        {
+            Transform border = cardGO.transform.Find("__SynergyBorder__");
+
+            if (expected.a <= 0.001f)
+            {
+                if (border != null && border.gameObject.activeSelf)
+                {
+                    Fail($"{context} expected clear border but border is visible.");
+                    return false;
+                }
+                Pass($"{context} border correctly clear.");
+                return true;
+            }
+
+            if (border == null || !border.gameObject.activeSelf)
+            {
+                Fail($"{context} expected visible border but border missing or hidden.");
+                return false;
+            }
+
+            if (border.childCount == 0)
+            {
+                Fail($"{context} border container has no strip children.");
+                return false;
+            }
+
+            var img = border.GetChild(0).GetComponent<Image>();
+            if (img == null)
+            {
+                Fail($"{context} border strip has no Image component.");
+                return false;
+            }
+
+            const float eps = 0.015f;
+            bool rgbMatch =
+                Math.Abs(img.color.r - expected.r) < eps
+                && Math.Abs(img.color.g - expected.g) < eps
+                && Math.Abs(img.color.b - expected.b) < eps;
+
+            if (!rgbMatch)
+            {
+                Fail(
+                    $"{context} border color mismatch. ExpectedRGB=({expected.r:F2},{expected.g:F2},{expected.b:F2}), ActualRGB=({img.color.r:F2},{img.color.g:F2},{img.color.b:F2})"
+                );
+                return false;
+            }
+
+            Pass($"{context} border matches expected.");
             return true;
         }
 

@@ -72,28 +72,12 @@ namespace SynergyHighlightMod.Patches
                 if (tagData.Selected && IsUnderContentTagSelectorPanel(instance.transform))
                 {
                     SynergyOverlay.Remove(instance.gameObject);
-#if DEBUG
-                    LiveBehaviorAssertions.ValidateContentCardColor(
-                        instance,
-                        tagData.Id,
-                        selectedInSelectorPanel: true,
-                        interactable: instance.Interactable
-                    );
-#endif
                     return;
                 }
 
                 if (!instance.Interactable)
                 {
                     SynergyOverlay.Apply(instance.gameObject, Color.clear);
-#if DEBUG
-                    LiveBehaviorAssertions.ValidateContentCardColor(
-                        instance,
-                        tagData.Id,
-                        selectedInSelectorPanel: false,
-                        interactable: false
-                    );
-#endif
                     return;
                 }
 
@@ -102,14 +86,6 @@ namespace SynergyHighlightMod.Patches
                 if (genres.Count == 0)
                 {
                     SynergyOverlay.Apply(instance.gameObject, Color.clear);
-#if DEBUG
-                    LiveBehaviorAssertions.ValidateContentCardColor(
-                        instance,
-                        tagData.Id,
-                        selectedInSelectorPanel: false,
-                        interactable: true
-                    );
-#endif
                     return;
                 }
 
@@ -120,14 +96,6 @@ namespace SynergyHighlightMod.Patches
                 );
 
                 SynergyOverlay.Apply(instance.gameObject, color);
-#if DEBUG
-                LiveBehaviorAssertions.ValidateContentCardColor(
-                    instance,
-                    tagData.Id,
-                    selectedInSelectorPanel: false,
-                    interactable: true
-                );
-#endif
             }
             catch (System.Exception ex)
             {
