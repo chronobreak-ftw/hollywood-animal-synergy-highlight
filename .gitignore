@@ -9,8 +9,6 @@ Directory.Build.props
 # Decompiled game source / local game files
 Hollywood.Animal*/
 BepInExContainer/
-HollywoodAnimalSourceCode/
-Data/
 
 # Other
 Docs/

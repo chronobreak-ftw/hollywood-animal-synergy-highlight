@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
-    Set GameDir and BepInExDir in Directory.Build.props next to the .sln (see Directory.Build.props.example).
+    Set GameDir and BepInExDir in Directory.Build.props next to SynergyHighlight.sln (see Directory.Build.props.example).
     That file is gitignored so machine-specific paths are not committed.
   -->
   <Target Name="EnsureGamePaths" BeforeTargets="BeforeBuild">
     <Error
       Condition="'$(GameDir)' == '' or '$(BepInExDir)' == ''"
-      Text="Copy Directory.Build.props.example to Directory.Build.props (repo root) and set GameDir and BepInExDir for your install."
+      Text="Copy Directory.Build.props.example to Directory.Build.props (next to SynergyHighlight.sln) and set GameDir and BepInExDir for your install."
     />
   </Target>
 

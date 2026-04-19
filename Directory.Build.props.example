@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <!--
-    Copy this file to "Directory.Build.props" next to the .sln and set paths for your machine.
+    Copy this file to "Directory.Build.props" next to SynergyHighlight.sln and set paths for your machine.
     Directory.Build.props is gitignored so your layout stays local only.
   -->
   <PropertyGroup>
