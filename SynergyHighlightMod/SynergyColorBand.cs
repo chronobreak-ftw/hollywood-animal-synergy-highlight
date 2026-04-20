@@ -11,7 +11,7 @@ namespace SynergyHighlightMod
 
     internal static class SynergyColorBand
     {
-        // Tag-genre compatibility thresholds (score range 1–5)
+        // Tag-genre compatibility thresholds (score range 1-5)
         internal const float ScoreGreenMin = 4.0f;
         internal const float ScoreYellowMin = 3.5f;
         internal const float ScoreRedMax = 2.5f;
