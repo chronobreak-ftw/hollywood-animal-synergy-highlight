@@ -74,6 +74,6 @@ namespace SynergyHighlightMod
     {
         public const string GUID = "hollywoodanimal.synergyhighlight";
         public const string Name = "Synergy Highlight";
-        public const string Version = "1.0.0";
+        public const string Version = "1.1.0";
     }
 }
