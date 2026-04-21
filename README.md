@@ -2,9 +2,11 @@
 
 This mod shows internal game compatibility data in real-time via colored overlays so you can see synergy scores while building your scripts.
 
+<img width="2558" height="1438" alt="screenshot" src="https://github.com/user-attachments/assets/3d85533c-8fe5-4b89-9fa5-77443775e235" />
+
 ## How to use
 
-1. Install [BepInEx](https://github.com/BepInEx/BepInEx/releases) into your Hollywood Animal folder (commonly at `/Steam/steamapps/common/Hollywood Animal/`)
+1. Install [BepInEx (Mono build)](https://github.com/BepInEx/BepInEx/releases) into your Hollywood Animal folder (commonly at `/Steam/steamapps/common/Hollywood Animal/`)
 2. Launch the game once so BepInEx creates `/Hollywood Animal/BepInEx/plugins/`.
 3. Copy `SynergyHighlightMod.dll` into `/Hollywood Animal/BepInEx/plugins/`.
 4. Launch the game again.
