@@ -40,8 +40,6 @@ namespace SynergyHighlightMod.Tests
 
         private void Load() => SynergyDatabase.Load(_tempDir, _errors.Add, _warnings.Add);
 
-        // ---- IsLoaded ----
-
         [Fact]
         public void Load_SetsIsLoaded_WhenBothFilesValid()
         {
@@ -84,15 +82,12 @@ namespace SynergyHighlightMod.Tests
             Load();
             Assert.True(SynergyDatabase.IsLoaded);
 
-            // Second load with missing compat
             File.Delete(Path.Combine(_tempDir, "Data", "Configs", "TagCompatibilityData.json"));
             _errors.Clear();
             Load();
 
             Assert.False(SynergyDatabase.IsLoaded);
         }
-
-        // ---- GetCompatibility ----
 
         [Fact]
         public void Load_ParsesCompatibilityScore()
@@ -137,8 +132,6 @@ namespace SynergyHighlightMod.Tests
             );
         }
 
-        // ---- GetGenrePairSum ----
-
         [Fact]
         public void Load_ParsesGenrePairSum()
         {
@@ -161,8 +154,6 @@ namespace SynergyHighlightMod.Tests
                 SynergyDatabase.GetGenrePairSum("GENRE_2", "GENRE_1")
             );
         }
-
-        // ---- Asymmetry warning ----
 
         [Fact]
         public void Load_LogsWarning_WhenGenrePairsAreAsymmetric()

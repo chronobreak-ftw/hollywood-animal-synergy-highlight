@@ -22,8 +22,6 @@ namespace SynergyHighlightMod.Patches
                 ForceUpdateViews(t.Field("contentSupportingCharactersList").GetValue<object>());
                 ForceUpdateViews(t.Field("contentThemesAndEventsList").GetValue<object>());
 
-                // The setting tag is also shown inline on the Content tab sidebar;
-                // force its view to refresh so the overlay color is current.
                 var display = t.Field("settingItemViewDisplay").GetValue<object>();
                 if (display != null)
                     Traverse

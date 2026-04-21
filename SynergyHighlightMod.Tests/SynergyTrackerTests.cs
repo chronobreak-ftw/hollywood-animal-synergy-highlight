@@ -73,7 +73,7 @@ namespace SynergyHighlightMod.Tests
             bool eventFired = false;
             Action handler = () => eventFired = true;
             SynergyTracker.OnGenresChanged += handler;
-            SynergyTracker.SetGenre("Action", true); // Already selected
+            SynergyTracker.SetGenre("Action", true);
             SynergyTracker.OnGenresChanged -= handler;
 
             Assert.False(eventFired);

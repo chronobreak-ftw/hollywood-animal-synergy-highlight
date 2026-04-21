@@ -105,7 +105,7 @@ namespace SynergyHighlightMod.Tests
                 "Tag",
                 new[] { "Action", "Unknown" }
             );
-            Assert.Equal(4f, score.Value, precision: 4); // (5 + 3) / 2
+            Assert.Equal(4f, score.Value, precision: 4);
         }
 
         [Fact]
@@ -172,8 +172,8 @@ namespace SynergyHighlightMod.Tests
         public void GetBestGenrePairScore_ReturnsBestAmongCandidates()
         {
             var gp = GenrePairs(
-                ("Action", "Comedy", 0.1f, 0.05f), // sum 0.15
-                ("Action", "Drama", 0.3f, 0.10f) // sum 0.40
+                ("Action", "Comedy", 0.1f, 0.05f),
+                ("Action", "Drama", 0.3f, 0.10f)
             );
             float? best = SynergyLogic.GetBestGenrePairScore(
                 gp,

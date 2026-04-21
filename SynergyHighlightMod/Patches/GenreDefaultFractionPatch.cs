@@ -28,9 +28,9 @@ namespace SynergyHighlightMod.Patches
 
             int desiredSteps;
             if (currentCount == 1)
-                desiredSteps = 10; // 2nd genre → 50%
+                desiredSteps = 10;
             else if (currentCount == 2)
-                desiredSteps = 5; // 3rd genre → 25%
+                desiredSteps = 5;
             else
                 return;
 

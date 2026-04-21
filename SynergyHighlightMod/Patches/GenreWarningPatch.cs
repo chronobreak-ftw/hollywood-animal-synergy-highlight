@@ -8,10 +8,6 @@ using UnityEngine;
 
 namespace SynergyHighlightMod.Patches
 {
-    // Two patches are needed because genre fraction changes and queue drains are separate events.
-    // OnGenreTagFractionUpdated fires during slider moves (queue may still have pending genres);
-    // CheckGenreQueue fires after the queue drains. Together they cover both paths without
-    // double-firing when the queue is empty at fraction-update time.
     [HarmonyPatch(typeof(MovieScriptEditorView), "OnGenreTagFractionUpdated")]
     static class MovieScriptEditorView_OnGenreTagFractionUpdated_WarningPatch
     {

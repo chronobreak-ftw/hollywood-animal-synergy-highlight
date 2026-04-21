@@ -4,8 +4,6 @@ namespace SynergyHighlightMod.Tests
 {
     public class SynergyColorBandTests
     {
-        // ---- FromScore ----
-
         [Fact]
         public void FromScore_ReturnsGreen_AtGreenThreshold() =>
             Assert.Equal(
@@ -51,8 +49,6 @@ namespace SynergyHighlightMod.Tests
         [Fact]
         public void FromScore_ReturnsClear_JustBelowYellowMin() =>
             Assert.Equal(ColorBand.Clear, SynergyColorBand.FromScore(3.49f));
-
-        // ---- FromGenrePairScore ----
 
         [Fact]
         public void FromGenrePairScore_ReturnsGreen_AtGreenThreshold() =>

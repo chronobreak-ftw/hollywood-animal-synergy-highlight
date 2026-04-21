@@ -21,8 +21,6 @@ namespace SynergyHighlightMod
             }
         }
 
-        // Intentionally does not fire OnGenresChanged: called from OnShow (full editor reset),
-        // which triggers a complete UI rebuild — cards re-color on their next OnUpdate frame.
         public static void Clear()
         {
             _genres.Clear();
