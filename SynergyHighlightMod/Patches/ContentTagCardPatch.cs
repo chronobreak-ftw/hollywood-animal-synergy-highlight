@@ -13,6 +13,12 @@ namespace SynergyHighlightMod.Patches
             "UI.Common.SubPanels.ContentTagSelectorPanel, Assembly-CSharp"
         );
 
+        private static GameObject GetOverlayParent(ContentTagCardItemView instance)
+        {
+            var scaler = Traverse.Create(instance).Field("cardScaler").GetValue<Component>();
+            return scaler != null ? scaler.gameObject : instance.gameObject;
+        }
+
         private static readonly HashSet<ContentTagCardItemView> _trackedCards =
             new HashSet<ContentTagCardItemView>();
 
@@ -57,10 +63,11 @@ namespace SynergyHighlightMod.Patches
                 EnsureSubscribed();
 
                 var tagData = Traverse.Create(instance).Property("TagData").GetValue<TagData>();
+                var overlayParent = GetOverlayParent(instance);
 
                 if (tagData?.Id == null)
                 {
-                    SynergyOverlay.Remove(instance.gameObject);
+                    SynergyOverlay.Remove(overlayParent);
                     _trackedCards.Remove(instance);
                     return;
                 }
@@ -69,13 +76,13 @@ namespace SynergyHighlightMod.Patches
 
                 if (tagData.Selected && IsUnderContentTagSelectorPanel(instance.transform))
                 {
-                    SynergyOverlay.Remove(instance.gameObject);
+                    SynergyOverlay.Remove(overlayParent);
                     return;
                 }
 
                 if (!instance.Interactable)
                 {
-                    SynergyOverlay.Apply(instance.gameObject, Color.clear);
+                    SynergyOverlay.Apply(overlayParent, Color.clear);
                     return;
                 }
 
@@ -83,7 +90,7 @@ namespace SynergyHighlightMod.Patches
 
                 if (genres.Count == 0)
                 {
-                    SynergyOverlay.Apply(instance.gameObject, Color.clear);
+                    SynergyOverlay.Apply(overlayParent, Color.clear);
                     return;
                 }
 
@@ -93,7 +100,7 @@ namespace SynergyHighlightMod.Patches
                     SynergyOverlay.OverlayAlphaContent
                 );
 
-                SynergyOverlay.Apply(instance.gameObject, color);
+                SynergyOverlay.Apply(overlayParent, color);
             }
             catch (System.Exception ex)
             {
