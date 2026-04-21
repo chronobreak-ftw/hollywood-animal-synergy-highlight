@@ -6,7 +6,7 @@ This mod shows internal game compatibility data in real-time via colored overlay
 
 ## How to use
 
-1. Install [BepInEx](https://github.com/BepInEx/BepInEx/releases) into your Hollywood Animal folder (commonly at `/Steam/steamapps/common/Hollywood Animal/`)
+1. Install [BepInEx (Mono build)](https://github.com/BepInEx/BepInEx/releases) into your Hollywood Animal folder (commonly at `/Steam/steamapps/common/Hollywood Animal/`)
 2. Launch the game once so BepInEx creates `/Hollywood Animal/BepInEx/plugins/`.
 3. Copy `SynergyHighlightMod.dll` into `/Hollywood Animal/BepInEx/plugins/`.
 4. Launch the game again.
