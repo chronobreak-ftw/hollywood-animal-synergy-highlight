@@ -27,11 +27,16 @@ namespace SynergyHighlightMod.Patches
 
         private static void RefreshAllTrackedCards()
         {
+            var dead = new List<ToggleImageListItemView>();
             foreach (var card in new List<ToggleImageListItemView>(_trackedCards))
             {
-                if (card != null)
+                if (card == null)
+                    dead.Add(card);
+                else
                     ApplyColor(card);
             }
+            foreach (var d in dead)
+                _trackedCards.Remove(d);
         }
 
         static void Postfix(ToggleImageListItemView __instance)

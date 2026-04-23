@@ -35,13 +35,16 @@ namespace SynergyHighlightMod.Patches
 
         private static void RefreshAllTrackedCards()
         {
+            var dead = new List<ContentTagCardItemView>();
             foreach (var card in new List<ContentTagCardItemView>(_trackedCards))
             {
-                if (card != null)
-                {
+                if (card == null)
+                    dead.Add(card);
+                else
                     Apply(card);
-                }
             }
+            foreach (var d in dead)
+                _trackedCards.Remove(d);
         }
 
         private static bool IsUnderContentTagSelectorPanel(Transform t)
@@ -104,8 +107,7 @@ namespace SynergyHighlightMod.Patches
             }
             catch (System.Exception ex)
             {
-                var log = BepInEx.Logging.Logger.CreateLogSource("Synergy Highlight");
-                log.LogError($"[ContentTagCardOverlay] Exception in Apply: {ex}");
+                Plugin.Log.LogError($"[ContentTagCardOverlay] Exception in Apply: {ex}");
             }
         }
     }

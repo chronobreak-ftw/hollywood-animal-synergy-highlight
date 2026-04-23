@@ -184,5 +184,57 @@ namespace SynergyHighlightMod.Tests
 
             Assert.Empty(_warnings);
         }
+
+        [Fact]
+        public void GetSynergyScore_AveragesCompatOverGenres()
+        {
+            WriteCompat(@"{""TAG_A"":{""GENRE_1"":""5.0"",""GENRE_2"":""3.0""}}");
+            WriteGenrePairs(@"{}");
+            Load();
+
+            float? score = SynergyDatabase.GetSynergyScore("TAG_A", new[] { "GENRE_1", "GENRE_2" });
+
+            Assert.Equal(4.0f, score.Value, precision: 4);
+        }
+
+        [Fact]
+        public void GetSynergyScore_ReturnsNull_WhenNoGenres()
+        {
+            WriteCompat(@"{""TAG_A"":{""GENRE_1"":""4.0""}}");
+            WriteGenrePairs(@"{}");
+            Load();
+
+            Assert.Null(SynergyDatabase.GetSynergyScore("TAG_A", new string[0]));
+        }
+
+        [Fact]
+        public void GetBestGenrePairScore_ReturnsBestAmongCandidates()
+        {
+            WriteCompat(@"{}");
+            WriteGenrePairs(
+                @"{""GENRE_1"":{
+                    ""GENRE_2"":{""Item1"":""0.20"",""Item2"":""0.15""},
+                    ""GENRE_3"":{""Item1"":""0.30"",""Item2"":""0.10""}
+                }}"
+            );
+            Load();
+
+            float? best = SynergyDatabase.GetBestGenrePairScore(
+                "GENRE_1",
+                new[] { "GENRE_2", "GENRE_3" }
+            );
+
+            Assert.Equal(0.40f, best.Value, precision: 4);
+        }
+
+        [Fact]
+        public void GetBestGenrePairScore_ReturnsNull_WhenOnlySelfInList()
+        {
+            WriteCompat(@"{}");
+            WriteGenrePairs(@"{""GENRE_1"":{""GENRE_2"":{""Item1"":""0.2"",""Item2"":""0.15""}}}");
+            Load();
+
+            Assert.Null(SynergyDatabase.GetBestGenrePairScore("GENRE_1", new[] { "GENRE_1" }));
+        }
     }
 }

@@ -52,10 +52,16 @@ namespace SynergyHighlightMod.Patches
 
                 float relevance = AdsAgentSynergyLogic.ComputeRelevance(agent, movie, processor);
 
-                bool isInModal = __instance.GetComponentInParent<AdAgentSelectionView>() != null;
+                bool isInModal;
+                int id = __instance.GetInstanceID();
+                if (!AdsHighlightTracker.TryGetIsInModal(id, out isInModal))
+                {
+                    isInModal = __instance.GetComponentInParent<AdAgentSelectionView>() != null;
+                    AdsHighlightTracker.SetIsInModal(id, isInModal);
+                }
+
                 if (isInModal)
                 {
-                    // Modal: subtle background tint so the native selection outline stays visible.
                     Color tint = SynergyOverlay.AdRelevanceToColor(
                         relevance,
                         SynergyOverlay.OverlayAlphaAdModal
@@ -65,7 +71,6 @@ namespace SynergyHighlightMod.Patches
                     return;
                 }
 
-                // Selected list (right panel): colored border.
                 SynergyOverlay.ApplyTint(__instance.gameObject, Color.clear);
                 Color color = SynergyOverlay.AdRelevanceToColor(
                     relevance,

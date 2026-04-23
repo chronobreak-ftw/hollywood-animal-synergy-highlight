@@ -1,3 +1,4 @@
+using System;
 using GUISystemModule;
 using HarmonyLib;
 using UI.Views;
@@ -9,7 +10,14 @@ namespace SynergyHighlightMod.Patches
     {
         static void Prefix(MovieScriptEditorView __instance, GUIParams param, bool withIntro)
         {
-            SynergyTracker.Clear();
+            try
+            {
+                SynergyTracker.Clear();
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError($"[MovieScriptEditorPatch] Exception: {ex}");
+            }
         }
     }
 }

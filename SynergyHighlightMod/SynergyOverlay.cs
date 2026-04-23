@@ -7,15 +7,13 @@ namespace SynergyHighlightMod
     {
         private const string OVERLAY_NAME = "__SynergyOverlay__";
         private const string BORDER_NAME = "__SynergyBorder__";
+        private const string TINT_NAME = "__AdModalTint__";
         private const float BORDER_ALPHA = 0.90f;
         private const float BORDER_THICKNESS = 3f;
 
         public const float OverlayAlphaGenre = 0.25f;
-
         public const float OverlayAlphaSetting = 0.10f;
-
         public const float OverlayAlphaContent = 0.35f;
-
         public const float OverlayAlphaAdModal = 0.10f;
 
         private static readonly Color Clear = new Color(0f, 0f, 0f, 0f);
@@ -46,62 +44,39 @@ namespace SynergyHighlightMod
             return Clear;
         }
 
-        public static void Apply(GameObject cardGO, Color color)
+        // ── Shared helper ────────────────────────────────────────────────────────────
+
+        private static Image EnsureOverlayImage(GameObject cardGO, string name)
         {
-            Transform existing = cardGO.transform.Find(OVERLAY_NAME);
-            Image img;
+            Transform existing = cardGO.transform.Find(name);
+            if (existing != null)
+                return existing.GetComponent<Image>();
 
-            if (existing == null)
-            {
-                var go = new GameObject(OVERLAY_NAME);
-                go.transform.SetParent(cardGO.transform, false);
-                var rt = go.AddComponent<RectTransform>();
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                rt.SetAsLastSibling();
-                img = go.AddComponent<Image>();
-                img.raycastTarget = false;
-            }
-            else
-            {
-                img = existing.GetComponent<Image>();
-            }
-
-            bool visible = color.a > 0.001f;
-            img.color = color;
-            img.gameObject.SetActive(visible);
+            var go = new GameObject(name);
+            go.transform.SetParent(cardGO.transform, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.SetAsLastSibling();
+            var img = go.AddComponent<Image>();
+            img.raycastTarget = false;
+            return img;
         }
 
-        private const string TINT_NAME = "__AdModalTint__";
+        public static void Apply(GameObject cardGO, Color color)
+        {
+            var img = EnsureOverlayImage(cardGO, OVERLAY_NAME);
+            img.color = color;
+            img.gameObject.SetActive(color.a > 0.001f);
+        }
 
         public static void ApplyTint(GameObject cardGO, Color color)
         {
-            Transform existing = cardGO.transform.Find(TINT_NAME);
-            Image img;
-
-            if (existing == null)
-            {
-                var go = new GameObject(TINT_NAME);
-                go.transform.SetParent(cardGO.transform, false);
-                var rt = go.AddComponent<RectTransform>();
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                rt.SetAsLastSibling();
-                img = go.AddComponent<Image>();
-                img.raycastTarget = false;
-            }
-            else
-            {
-                img = existing.GetComponent<Image>();
-            }
-
-            bool visible = color.a > 0.001f;
+            var img = EnsureOverlayImage(cardGO, TINT_NAME);
             img.color = color;
-            img.gameObject.SetActive(visible);
+            img.gameObject.SetActive(color.a > 0.001f);
         }
 
         public static void ApplyBorder(GameObject cardGO, Color baseColor)
@@ -194,12 +169,12 @@ namespace SynergyHighlightMod
 
         public static void Remove(GameObject cardGO)
         {
-            Transform ov = cardGO.transform.Find(OVERLAY_NAME);
-            if (ov != null)
-                Object.Destroy(ov.gameObject);
-            Transform br = cardGO.transform.Find(BORDER_NAME);
-            if (br != null)
-                Object.Destroy(br.gameObject);
+            foreach (string name in new[] { OVERLAY_NAME, BORDER_NAME, TINT_NAME })
+            {
+                Transform t = cardGO.transform.Find(name);
+                if (t != null)
+                    Object.Destroy(t.gameObject);
+            }
         }
     }
 }

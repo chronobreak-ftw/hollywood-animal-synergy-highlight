@@ -89,6 +89,12 @@ namespace SynergyHighlightMod.Tests
         }
 
         [Fact]
+        public void GetQualityEff_NegativeIndex_ReturnsZero()
+        {
+            Assert.Equal(0f, AdsAgentSynergyCore.GetQualityEff(-1), 4);
+        }
+
+        [Fact]
         public void ComputeRelevanceCore_Fc2_IsGreen()
         {
             var audiences = new[] { (1, 2), (3, 2), (5, 2) };

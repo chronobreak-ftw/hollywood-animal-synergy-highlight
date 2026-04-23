@@ -1,3 +1,4 @@
+using System;
 using Data.Configs;
 using Data.GameObject.Movie;
 using Enums;
@@ -6,12 +7,6 @@ using UnityEngine;
 
 namespace SynergyHighlightMod
 {
-    /// <summary>
-    /// Translates game types into the primitives that <see cref="AdsAgentSynergyCore"/> needs,
-    /// then delegates all math to that game-dependency-free class.
-    ///
-    /// See AdsAgentSynergyCore.cs for the formula derivation and constant sources.
-    /// </summary>
     internal static class AdsAgentSynergyLogic
     {
         internal static float ComputeRelevance(
@@ -43,8 +38,6 @@ namespace SynergyHighlightMod
             );
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────────────────
-
         private static void GetMovieScores(
             MovieDataWrapper movie,
             out float artTotal,
@@ -52,12 +45,16 @@ namespace SynergyHighlightMod
             out float baseline
         )
         {
-            // Prefer the release-stage result (what the game actually uses at runtime);
-            // fall back to the max-across-stages values that MovieDataWrapper exposes publicly.
             var result =
                 TryGetStageResult(movie, MovieStages.Release)
                 ?? TryGetStageResult(movie, MovieStages.Postproduction)
                 ?? TryGetStageResult(movie, MovieStages.Production);
+
+            if (result == null)
+                Plugin.Log?.LogWarning(
+                    "[AdsAgentSynergyLogic] No stage result found for movie; "
+                        + "ad relevance scores are based on max potential and may be inaccurate."
+                );
 
             artTotal = Mathf.Clamp01(result?.ArtTotal ?? movie.MaxArtScoreTotal);
             comTotal = Mathf.Clamp01(result?.CommercialTotal ?? movie.MaxComScoreTotal);
@@ -72,8 +69,11 @@ namespace SynergyHighlightMod
             {
                 return movie.GetStageResult(stage);
             }
-            catch
+            catch (Exception ex)
             {
+                Plugin.Log?.LogDebug(
+                    $"[AdsAgentSynergyLogic] GetStageResult({stage}) threw: {ex.Message}"
+                );
                 return null;
             }
         }

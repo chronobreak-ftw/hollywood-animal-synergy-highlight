@@ -1,4 +1,4 @@
-# Synergy Highlight Mod
+# Synergy Highlight Mod v1.1.0
 
 This mod shows internal game compatibility data in real-time via colored overlays so you can see synergy scores while building your scripts.
 
@@ -17,7 +17,7 @@ Tag Overlays
 
 - Green (4.0+): Peak synergy.
 - Yellow (3.5-3.9): Decent fit.
-- None (2.6-3.4): Neutral.
+- None (> 2.5 and < 3.5): Neutral.
 - Red (< 2.5): Score penalty.
 
 ## Genre Borders
@@ -28,10 +28,11 @@ Tag Overlays
 
 ## Slider Warnings
 
-The bar above the genre slider monitors your pair bonus:
+The bar above the genre slider monitors your genre pair bonus:
 
-- Green: Bonus is active.
-- Red: Bonus Lost. Check your genre percentages.
+- Green: Percentage thresholds met and all selected genre pairs have full synergy.
+- None (no border): Percentage thresholds met but at least one genre pair is not at full synergy. The bonus is still active; consider swapping a genre for a better-paired one.
+- Red: Bonus lost. Your top two genres do not sum to 70%, or the smaller of the two is below 35%.
 
 ## Advertising Highlights
 

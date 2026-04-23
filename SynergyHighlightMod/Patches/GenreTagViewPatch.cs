@@ -26,15 +26,6 @@ namespace SynergyHighlightMod.Patches
 
     static class GenreTagViewPatchHelper
     {
-        private static BepInEx.Logging.ManualLogSource _log;
-
-        private static BepInEx.Logging.ManualLogSource GetLog()
-        {
-            if (_log == null)
-                _log = BepInEx.Logging.Logger.CreateLogSource("Synergy Highlight");
-            return _log;
-        }
-
         internal static void SyncAndColor(GenreTagItemView instance)
         {
             try
@@ -74,7 +65,7 @@ namespace SynergyHighlightMod.Patches
             }
             catch (Exception ex)
             {
-                GetLog().LogError($"[GenreTagViewPatch] Exception: {ex}");
+                Plugin.Log.LogError($"[GenreTagViewPatch] Exception: {ex}");
             }
         }
     }

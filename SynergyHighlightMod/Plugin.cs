@@ -1,4 +1,3 @@
-using System.IO;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -32,7 +31,7 @@ namespace SynergyHighlightMod
             );
 #endif
 
-            string streamingAssets = Path.Combine(Application.streamingAssetsPath);
+            string streamingAssets = Application.streamingAssetsPath;
             SynergyDatabase.Load(
                 streamingAssets,
                 msg => Log.LogError(msg),
