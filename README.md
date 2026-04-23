@@ -1,4 +1,4 @@
-# Synergy Highlight Mod v1.1.0
+# Synergy Highlight Mod v1.2.0
 
 This mod shows internal game compatibility data in real-time via colored overlays so you can see synergy scores while building your scripts.
 
