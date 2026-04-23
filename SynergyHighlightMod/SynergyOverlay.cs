@@ -16,6 +16,8 @@ namespace SynergyHighlightMod
 
         public const float OverlayAlphaContent = 0.35f;
 
+        public const float OverlayAlphaAdModal = 0.10f;
+
         private static readonly Color Clear = new Color(0f, 0f, 0f, 0f);
         private static readonly Color ColorGreen = new Color(0.10f, 0.90f, 0.20f);
         private static readonly Color ColorYellow = new Color(0.95f, 0.95f, 0.40f);
@@ -27,6 +29,9 @@ namespace SynergyHighlightMod
 
         public static Color GenrePairScoreToColor(float? pairSum, float overlayAlpha) =>
             BandToColor(SynergyColorBand.FromGenrePairScore(pairSum), overlayAlpha);
+
+        public static Color AdRelevanceToColor(float relevance, float overlayAlpha) =>
+            BandToColor(SynergyColorBand.FromAdRelevance(relevance), overlayAlpha);
 
         private static Color BandToColor(ColorBand band, float alpha)
         {
@@ -49,6 +54,36 @@ namespace SynergyHighlightMod
             if (existing == null)
             {
                 var go = new GameObject(OVERLAY_NAME);
+                go.transform.SetParent(cardGO.transform, false);
+                var rt = go.AddComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.SetAsLastSibling();
+                img = go.AddComponent<Image>();
+                img.raycastTarget = false;
+            }
+            else
+            {
+                img = existing.GetComponent<Image>();
+            }
+
+            bool visible = color.a > 0.001f;
+            img.color = color;
+            img.gameObject.SetActive(visible);
+        }
+
+        private const string TINT_NAME = "__AdModalTint__";
+
+        public static void ApplyTint(GameObject cardGO, Color color)
+        {
+            Transform existing = cardGO.transform.Find(TINT_NAME);
+            Image img;
+
+            if (existing == null)
+            {
+                var go = new GameObject(TINT_NAME);
                 go.transform.SetParent(cardGO.transform, false);
                 var rt = go.AddComponent<RectTransform>();
                 rt.anchorMin = Vector2.zero;

@@ -46,5 +46,20 @@ namespace SynergyHighlightMod
                 return ColorBand.Red;
             return ColorBand.Clear;
         }
+
+        internal const float AdGreenMin = 0.65f;
+        internal const float AdYellowMin = 0.45f;
+        internal const float AdRedMax = 0.25f;
+
+        internal static ColorBand FromAdRelevance(float relevance)
+        {
+            if (relevance >= AdGreenMin)
+                return ColorBand.Green;
+            if (relevance >= AdYellowMin)
+                return ColorBand.Yellow;
+            if (relevance <= AdRedMax)
+                return ColorBand.Red;
+            return ColorBand.Clear;
+        }
     }
 }

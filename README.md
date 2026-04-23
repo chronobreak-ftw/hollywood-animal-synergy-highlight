@@ -33,6 +33,31 @@ The bar above the genre slider monitors your pair bonus:
 - Green: Bonus is active.
 - Red: Bonus Lost. Check your genre percentages.
 
+## Advertising Highlights
+
+The score is computed from the same formula the game uses to calculate expected audience. For each `(demographic, score type)` pair a company covers:
+
+```
+subgroupScore = AudienceFraction[scoreType]
+              × audienceGroupWeight[demographic][scoreType]
+              × AdsEfficiency[quality]
+              × movieScore[scoreType]
+```
+
+- **AudienceFraction** - fraction of all cinema-goers that respond to each score type: BASE 55%, COM 30%, ART 15%.
+- **audienceGroupWeight** - demographic's share of that fraction: teens and young adults dominate COM; young adults dominate ART and BASE; adults (AM/AF) have low weights in every pool.
+- **AdsEfficiency** - agency quality multiplier: budget=0.15, standard=0.30, premium=0.50.
+- **movieScore** - the movie's ArtTotal, CommercialTotal, or Baseline from the current stage result.
+
+Each subgroup score is normalised against the best possible for this movie (highest achievable across all 18 demographic × score-type combinations at max quality), then averaged across the company's covered pairs.
+
+### Advertising colors
+
+- Green (≥ 0.65): This company is among the most efficient choices for this movie.
+- Yellow (0.45 - 0.64): Decent - above average.
+- None (0.26 - 0.44): Below average for this movie.
+- Red (≤ 0.25): Poor fit - this company's audience pool or quality tier makes it inefficient.
+
 ## Scoring Logic
 
 The mod tracks three separate variables:

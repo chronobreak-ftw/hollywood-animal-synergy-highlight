@@ -22,5 +22,9 @@
     <Compile Include="..\SynergyHighlightMod\SynergyDatabase.cs" Link="Shared\SynergyDatabase.cs" />
     <Compile Include="..\SynergyHighlightMod\SynergyLogic.cs" Link="Shared\SynergyLogic.cs" />
     <Compile Include="..\SynergyHighlightMod\SynergyTracker.cs" Link="Shared\SynergyTracker.cs" />
+    <Compile
+      Include="..\SynergyHighlightMod\AdsAgentSynergyCore.cs"
+      Link="Shared\AdsAgentSynergyCore.cs"
+    />
   </ItemGroup>
 </Project>
